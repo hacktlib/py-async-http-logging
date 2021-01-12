@@ -20,7 +20,7 @@ publish_requirements = dev_requirements + ['twine>=3.2.0']
 
 
 setup(
-    name='async-http-logging',
+    name='http_logging',
     version='0.1.0',
     description='Non-blocking HTTP handler for Python `logging` with local '
                 'SQLite buffer/cache.',
