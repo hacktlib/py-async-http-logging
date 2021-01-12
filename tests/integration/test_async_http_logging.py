@@ -51,8 +51,13 @@ def test_handler(run_localserver, localhost):
     except Exception:
         logged_messages['error'] = traceback.format_exc()
 
+    info_extra = {'foo': 'bar'}
+
     for level, message in logged_messages.items():
-        getattr(logger, level)(message)
+        if level == 'info':
+            getattr(logger, level)(message, extra=info_extra)
+        else:
+            getattr(logger, level)(message)
 
     # Trigger event flushing to make sure logs are sent to localserver
     # See: https://archive.vn/B6yFt#selection-3749.0-3795.34
@@ -93,3 +98,9 @@ def test_handler(run_localserver, localhost):
         recorded_log = recorded_logs_by_level[level.upper()]
 
         assert recorded_log['message'] == str(message)
+
+        if level == 'info':
+            assert 'extra' in recorded_log.keys()
+            assert recorded_log['extra'] == info_extra
+        else:
+            assert 'extra' not in recorded_log.keys()

@@ -1,7 +1,9 @@
+import copy
 import json
 import logging
 import os
-from typing import Callable, Dict, Iterator, Optional, Union
+import sys
+from typing import Callable, Dict, List, Optional, Union
 
 from logstash_async import constants
 from logstash_async.formatter import LogstashFormatter
@@ -12,20 +14,20 @@ import requests
 
 logger = logging.getLogger(__name__)
 
-HTTP_PORT = os.environ.get('ASYNC_LOG_HTTP_PORT', 80)
-HTTPS_PORT = os.environ.get('ASYNC_LOG_HTTPS_PORT', 443)
+HTTP_PORT = int(os.environ.get('ASYNC_LOG_HTTP_PORT', 80))
+HTTPS_PORT = int(os.environ.get('ASYNC_LOG_HTTPS_PORT', 443))
 DATABASE_PATH = os.environ.get('ASYNC_LOG_DATABASE_PATH', 'logging-cache.db')
-TIMEOUT = os.environ.get('ASYNC_LOG_TIMEOUT', 5.0)
-ENCODING = os.environ.get('ASYNC_LOG_ENCODING', 'utf-8')
+TIMEOUT = float(os.environ.get('ASYNC_LOG_TIMEOUT', 5.0))
+ENCODING = os.environ.get('ASYNC_LOG_ENCODING', sys.getfilesystemencoding())
 
 
 # Override constants
 constants.SOCKET_TIMEOUT = TIMEOUT
-constants.QUEUE_CHECK_INTERVAL = os.environ.get('ASYNC_LOG_QUEUE_CHECK_INTERVAL', 1.0)  # NOQA
-constants.QUEUED_EVENTS_FLUSH_INTERVAL = os.environ.get('ASYNC_LOG_QUEUED_EVENTS_FLUSH_INTERVAL', 5.0)  # NOQA
-constants.QUEUED_EVENTS_FLUSH_COUNT = os.environ.get('ASYNC_LOG_QUEUED_EVENTS_FLUSH_COUNT', 10)  # NOQA
-constants.QUEUED_EVENTS_BATCH_SIZE = os.environ.get('QUEUED_EVENTS_BATCH_SIZE', 10)  # NOQA
-constants.DATABASE_TIMEOUT = os.environ.get('ASYNC_LOG_DATABASE_TIMEOUT', 2.5)
+constants.QUEUE_CHECK_INTERVAL = float(os.environ.get('ASYNC_LOG_QUEUE_CHECK_INTERVAL', 1.0))  # NOQA
+constants.QUEUED_EVENTS_FLUSH_INTERVAL = float(os.environ.get('ASYNC_LOG_QUEUED_EVENTS_FLUSH_INTERVAL', 5.0))  # NOQA
+constants.QUEUED_EVENTS_FLUSH_COUNT = int(os.environ.get('ASYNC_LOG_QUEUED_EVENTS_FLUSH_COUNT', 10))  # NOQA
+constants.QUEUED_EVENTS_BATCH_SIZE = int(os.environ.get('ASYNC_LOG_QUEUED_EVENTS_BATCH_SIZE', 10))  # NOQA
+constants.DATABASE_TIMEOUT = float(os.environ.get('ASYNC_LOG_DATABASE_TIMEOUT', 2.5))  # NOQA
 
 
 class AsyncHttpHandler(AsynchronousLogstashHandler):
@@ -41,7 +43,7 @@ class AsyncHttpHandler(AsynchronousLogstashHandler):
         transport: Transport = None,
         formatter: logging.Formatter = None,
         custom_headers: Callable = None,
-        ssl_enable: bool = False,
+        ssl_enable: bool = True,
         ssl_verify: bool = True,
         keyfile=None,
         certfile=None,
@@ -192,9 +194,28 @@ class HttpLogFormatter(LogstashFormatter):
         )
 
         self._extension = extension
+        self._default_log_record_keys = None
 
-    def format(self, record):
-        message = {
+    @property
+    def default_log_record_keys(self):
+        '''Extract __dict__.keys from a dummy LogRecord object'''
+        if self._default_log_record_keys is None:
+            dummy_record = logging.LogRecord(
+                name="INFO",
+                level=20,
+                pathname="/",
+                lineno=1,
+                msg="Message",
+                args=(),
+                exc_info=None,
+            )
+
+            self._default_log_record_keys = dummy_record.__dict__.keys()
+
+        return self._default_log_record_keys
+
+    def build_log_message(self, record: logging.LogRecord):
+        return {
             'type': self._message_type,
             'created': record.created,
             'relative_created': record.relativeCreated,
@@ -203,6 +224,7 @@ class HttpLogFormatter(LogstashFormatter):
                 'number': record.levelno,
                 'name': record.levelname,
             },
+            'stack_trace': self._format_exception(record.exc_info),
             'sourcecode': {
                 'pathname': record.pathname,
                 'function': record.funcName,
@@ -218,15 +240,27 @@ class HttpLogFormatter(LogstashFormatter):
             },
         }
 
-        if callable(self._extension):
-            message.update(self._extension(record))
+    def format(self, record: logging.LogRecord):
+        message = self.build_log_message(record=record)
 
-        if self._metadata:
-            message['metadata'] = self._metadata
-
-        if self._tags:
-            message['tags'] = self._tags
-
-        message[self._extra_prefix] = self._get_extra_fields(record)
+        message = self._get_extra_fields(message, record)
 
         return self._serialize(message)
+
+    def _get_extra_fields(
+        self,
+        message: dict,
+        record: logging.LogRecord,
+    ) -> dict:
+        message = copy.deepcopy(message)
+
+        extra = {
+            key: getattr(record, key)
+            for key in record.__dict__.keys()
+            if key not in self.default_log_record_keys
+        }
+
+        if len(extra) > 0:
+            message[self._extra_prefix] = extra
+
+        return message
