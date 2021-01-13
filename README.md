@@ -5,9 +5,15 @@ Non-blocking HTTP handler for Python `logging` with local SQLite buffer/cache.
 > This library was written for [Hackt CLI](https://hackt.app/?utm_source=github&utm_medium=gitlink&utm_campaign=oss-py-async-http-logging) and open sourced for anyone interested.
 
 ![Test Coverage](https://raw.githubusercontent.com/hacktlib/py-async-http-logging/main/coverage.svg)
+![Maintained](https://img.shields.io/maintenance/yes/2021)
+[![Maintainability](https://img.shields.io/codeclimate/maintainability/hacktlib/py-async-http-logging)](https://codeclimate.com/github/hacktlib/py-async-http-logging)
+[![Technical Debt](https://img.shields.io/codeclimate/tech-debt/hacktlib/py-async-http-logging)](https://codeclimate.com/github/hacktlib/py-async-http-logging)
+[![Issues](https://img.shields.io/codeclimate/issues/hacktlib/py-async-http-logging)](https://codeclimate.com/github/hacktlib/py-async-http-logging/issues?category=complexity&engine_name%5B%5D=structure&engine_name%5B%5D=duplication)
+
+[![Requirements Status](https://requires.io/github/hacktlib/py-async-http-logging/requirements.svg?branch=main)](https://requires.io/github/hacktlib/py-async-http-logging/requirements/?branch=main)
 [![PyPI](https://img.shields.io/pypi/v/http_logging)](https://pypi.org/project/http_logging/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Requirements Status](https://requires.io/github/hacktlib/py-async-http-logging/requirements.svg?branch=main)](https://requires.io/github/hacktlib/py-async-http-logging/requirements/?branch=main)
+
 [![Code Style](https://img.shields.io/badge/code%20style-PEP8-lightgrey)](https://github.com/hhatto/autopep8/)
 [![Code Formatter](https://img.shields.io/badge/formatter-autopep8-lightgrey)](https://github.com/hhatto/autopep8/)
 [![Test Framework](https://img.shields.io/badge/testing-pytest-lightgrey)](https://github.com/pytest-dev/pytest/)
