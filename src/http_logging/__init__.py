@@ -37,7 +37,6 @@ class AsyncHttpHandler(AsynchronousLogstashHandler):
         host: str,
         port: Optional[int] = None,
         path: Optional[str] = None,
-        query_strings: Optional[Dict[str, str]] = None,
         timeout: int = TIMEOUT,
         database_path: str = DATABASE_PATH,
         transport: Transport = None,
@@ -159,7 +158,7 @@ class AsyncHttpTransport(HttpTransport):
                     timeout=self._timeout,
                 )
 
-                if response.status_code != 200:
+                if not response.ok:
                     self.__session.close()
                     response.raise_for_status()
 
