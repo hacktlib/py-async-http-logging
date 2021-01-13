@@ -9,7 +9,7 @@ from typing import Callable, List, Optional, Union
 from logstash_async import constants
 from logstash_async.formatter import LogstashFormatter
 from logstash_async.handler import AsynchronousLogstashHandler
-from logstash_async.transport import HttpTransport, TimeoutNotSet, Transport
+from logstash_async.transport import HttpTransport, Transport
 import requests
 
 
@@ -181,30 +181,35 @@ class AsyncHttpTransport(HttpTransport):
 
         for batch in self.__batches(events):
             if self._use_logging or use_logging:
-                logger.debug(
-                    'Batch length: %s, Batch size: %s',
-                    len(batch),
-                    len(json.dumps(batch).encode('utf8')),
-                )
+                self.log_batch(batch=batch)
 
             try:
-                response = self.__session.post(
-                    self.url,
-                    headers=self.headers,
-                    json=batch,
-                    verify=self._ssl_verify,
-                    timeout=self._timeout,
-                )
-
-                if not response.ok:
-                    self.__session.close()
-                    response.raise_for_status()
-
+                self.send_batch(batch=batch)
             except requests.exceptions.ConnectionError as exc:
                 if self._use_logging or use_logging:
                     logger.exception(exc)
 
         self.__session.close()
+
+    def log_batch(self, batch: List[dict]) -> None:
+        logger.debug(
+            'Batch length: %s, Batch size: %s',
+            len(batch),
+            len(json.dumps(batch).encode('utf8')),
+        )
+
+    def send_batch(self, batch: dict) -> None:
+        response = self.__session.post(
+            self.url,
+            headers=self.headers,
+            json=batch,
+            verify=self._ssl_verify,
+            timeout=self._timeout,
+        )
+
+        if not response.ok:
+            self.__session.close()
+            response.raise_for_status()
 
 
 class HttpLogFormatter(LogstashFormatter):
