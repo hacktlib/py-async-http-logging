@@ -38,8 +38,17 @@ log_handler = AsyncHttpHandler(host='your-domain.com')
 logger = logging.getLogger()
 logger.addHandler(log_handler)
 
+# Works with simple log messages like:
 logger.info('Some useful information...')
-logger.error('Ooops!')
+
+# Can also handle extra fields:
+logger.warning('You\'ve been warned!', extra={'foo': 'bar'})
+
+# And, of course, captures exception with full stack-trace
+try:
+    1/0
+except Exception as exc:
+    logger.error('Ooops!', exc_info=exc)
 ```
 
 These log messages are cached in a local SQLite database and periodically delivered (asynchronously, in a separate thread) to your host in a POST request with a body similar to this one:
@@ -55,10 +64,35 @@ These log messages are cached in a local SQLite database and periodically delive
             "number": 20,
             "name": "INFO"
         },
+        "stack_trace": null,
         "sourcecode": {
             "pathname": "/path/to/your/python/script.py",
             "function": "function_name",
             "line": 123
+        },
+        "process": {
+            "id": 1234,
+            "name": "MainProcess"
+        },
+        "thread": {
+            "id": 1234567890,
+            "name": "MainThread"
+        }
+    },
+    {
+        "type": "async-http-logging",
+        "created": 1610393068.3663092,
+        "relative_created": 1506.3292980194092,
+        "message": "You've been warned!",
+        "level": {
+            "number": 30,
+            "name": "WARNING"
+        },
+        "stack_trace": null,
+        "sourcecode": {
+            "pathname": "/path/to/your/python/script.py",
+            "function": "function_name",
+            "line": 456
         },
         "process": {
             "id": 1234,
@@ -78,10 +112,11 @@ These log messages are cached in a local SQLite database and periodically delive
             "number": 40,
             "name": "ERROR"
         },
+        "stack_trace": "Traceback (most recent call last):\n  File \"/path/to/your/python/script.py\", line 17, in function_name\n    1/0\nZeroDivisionError: division by zero\n",
         "sourcecode": {
             "pathname": "/path/to/your/python/script.py",
             "function": "function_name",
-            "line": 456
+            "line": 17
         },
         "process": {
             "id": 1234,
