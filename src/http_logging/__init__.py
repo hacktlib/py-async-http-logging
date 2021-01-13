@@ -55,6 +55,8 @@ class ConfigLog:
     use_logging: bool = False
     encoding: str = ENCODING
     custom_headers: Callable = None
+    enable: bool = True,
+    security: HttpSecurity = HttpSecurity()
 
 
 class AsyncHttpHandler(AsynchronousLogstashHandler):
@@ -62,37 +64,34 @@ class AsyncHttpHandler(AsynchronousLogstashHandler):
     def __init__(
         self,
         http_host: HttpHost,
-        security: HttpSecurity = HttpSecurity(),
         config: ConfigLog = ConfigLog(),
         transport: Transport = None,
         formatter: logging.Formatter = None,
-        enable: bool = True,
         **kwargs,
     ):
         # Default to customized HTTP Transport
         if transport is None:
             transport = AsyncHttpTransport(
                 http_host=http_host,
-                security=security,
                 config=config,
             )
 
         resolve_port = http_host.port or \
-            HTTPS_PORT if security.ssl_enable else HTTP_PORT
+            HTTPS_PORT if config.security.ssl_enable else HTTP_PORT
 
         super().__init__(
             host=http_host.host,
             port=resolve_port,
-            database_path=database_path,
+            database_path=config.database_path,
             transport=transport,
-            ssl_enable=security.ssl_enable,
-            ssl_verify=security.ssl_verify,
-            keyfile=security.keyfile,
-            certfile=security.certfile,
-            ca_certs=security.ca_certs,
-            enable=enable,
-            event_ttl=event_ttl,
-            encoding=encoding,
+            ssl_enable=config.security.ssl_enable,
+            ssl_verify=config.security.ssl_verify,
+            keyfile=config.security.keyfile,
+            certfile=config.security.certfile,
+            ca_certs=config.security.ca_certs,
+            enable=config.enable,
+            event_ttl=config.event_ttl,
+            encoding=config.encoding,
             **kwargs,
         )
 
