@@ -59,22 +59,40 @@ class ConfigLog:
     security: HttpSecurity = HttpSecurity()
 
 
+@dataclass
+class SupportClass:
+    http_host: HttpHost
+    config: ConfigLog = ConfigLog()
+    _transport: Transport = None
+    _formatter: logging.Formatter = None
+
+    @property
+    def transport(self):
+        if self._transport is None:
+            self._transport = AsyncHttpTransport(
+                http_host=self.http_host,
+                config=self.config,
+            )
+        return self._transport
+
+    @property
+    def formatter(self):
+        if self._formatter is None:
+            self._formatter = HttpLogFormatter()
+        return self._formatter
+
+
 class AsyncHttpHandler(AsynchronousLogstashHandler):
 
     def __init__(
         self,
         http_host: HttpHost,
+        support_class: SupportClass = None,
         config: ConfigLog = ConfigLog(),
-        transport: Transport = None,
-        formatter: logging.Formatter = None,
         **kwargs,
     ):
-        # Default to customized HTTP Transport
-        if transport is None:
-            transport = AsyncHttpTransport(
-                http_host=http_host,
-                config=config,
-            )
+        if support_class is None:
+            support_class = SupportClass(http_host=http_host)
 
         resolve_port = http_host.port or \
             HTTPS_PORT if config.security.ssl_enable else HTTP_PORT
@@ -83,7 +101,7 @@ class AsyncHttpHandler(AsynchronousLogstashHandler):
             host=http_host.host,
             port=resolve_port,
             database_path=config.database_path,
-            transport=transport,
+            transport=support_class.transport,
             ssl_enable=config.security.ssl_enable,
             ssl_verify=config.security.ssl_verify,
             keyfile=config.security.keyfile,
@@ -95,11 +113,7 @@ class AsyncHttpHandler(AsynchronousLogstashHandler):
             **kwargs,
         )
 
-        # Default to HttpLogFormatter
-        if formatter is None:
-            formatter = HttpLogFormatter()
-
-        self.formatter = formatter
+        self.formatter = support_class.formatter
 
 
 class AsyncHttpTransport(HttpTransport):
