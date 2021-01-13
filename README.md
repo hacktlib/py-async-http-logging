@@ -33,15 +33,10 @@ pip install http_logging
 import logging
 from http_logging import AsyncHttpHandler
 
+log_handler = AsyncHttpHandler(host='your-domain.com')
+
 logger = logging.getLogger()
-logger.addHandler(AsyncHttpHandler(
-    host='your-domain.com',
-    port=443,  # Optional, defaults to 80 (HTTP) or 443 (HTTPS/TLS enabled)
-    path='/my-logs',  # Appended to the host (i.e. your-domain.com/app-logs)
-    ssl_enable=True,  # Default: True, may set to False on a dev environment
-    ssl_verify=True,  # Default: True, may set to False on a dev environment
-    database_path='local-cache-logs.db',  # SQLite DB filepath to cache logs
-))
+logger.addHandler(log_handler)
 
 logger.info('Some useful information...')
 logger.error('Ooops!')
