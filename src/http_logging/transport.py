@@ -1,11 +1,11 @@
 import json
 import logging
-from typing import List, Union
+from typing import List, Optional, Union
 
 from logstash_async.transport import HttpTransport
 import requests
 
-from http_logging import ConfigLog, HttpHost
+import http_logging
 
 
 logger = logging.getLogger('http-logging')
@@ -15,24 +15,32 @@ class AsyncHttpTransport(HttpTransport):
 
     def __init__(
         self,
-        http_host: HttpHost,
-        config: ConfigLog = ConfigLog(),
+        *,  # Prevent usage of positional args
+        http_host: http_logging.HttpHost,
+        config: Optional[http_logging.ConfigLog] = None,
         **kwargs
     ):
+        self.http_host = http_host
+        self.config = config
+
+        # Set default ConfigLog params
+        if self.config is None:
+            self.config = http_logging.ConfigLog()
+
         super().__init__(
-            host=http_host.host,
-            port=http_host.port,
-            timeout=http_host.timeout,
-            ssl_enable=config.security.ssl_enable,
-            ssl_verify=config.security.ssl_verify,
-            use_logging=config.use_logging,
+            host=self.http_host.name,
+            port=self.http_host.port,
+            timeout=self.http_host.timeout,
+            ssl_enable=self.config.security.ssl_enable,
+            ssl_verify=self.config.security.ssl_verify,
+            use_logging=self.config.use_logging,
             **kwargs,
         )
 
         self.__batches = super()._HttpTransport__batches
 
-        self._path = http_host.path
-        self._custom_headers = config.custom_headers
+        self._path = self.http_host.path
+        self._custom_headers = self.config.custom_headers
 
     @property
     def url(self) -> str:

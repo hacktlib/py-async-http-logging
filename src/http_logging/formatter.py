@@ -9,6 +9,7 @@ class HttpLogFormatter(LogstashFormatter):
 
     def __init__(
         self,
+        *,  # Prevent usage of positional args
         message_type: str = 'async-http-log',
         tags: Optional[list] = None,
         fully_qualified_domain_name: Union[str, bool] = False,
