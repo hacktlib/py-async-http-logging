@@ -176,40 +176,44 @@ class AsyncHttpTransport(HttpTransport):
             return {}
         return self._custom_headers()
 
-    def send(self, events: list, use_logging: bool = False, **kwargs) -> None:
+    def send(self, events: list, **kwargs) -> None:
         self.__session = requests.Session()
 
         for batch in self.__batches(events):
-            if self._use_logging or use_logging:
-                self.log_batch(batch=batch)
-
-            try:
-                self.send_batch(batch=batch)
-            except requests.exceptions.ConnectionError as exc:
-                if self._use_logging or use_logging:
-                    logger.exception(exc)
+            self.log_batch(batch=batch)
+            self.send_batch(batch=batch)
 
         self.__session.close()
 
+    def log_http_request(
+        self,
+        method: str,
+        content: Union[str, Exception],
+        **kwargs,
+    ) -> None:
+        if self._use_logging:
+            getattr(logger, method)(content, **kwargs)
+
     def log_batch(self, batch: List[dict]) -> None:
-        logger.debug(
-            'Batch length: %s, Batch size: %s',
-            len(batch),
-            len(json.dumps(batch).encode('utf8')),
-        )
+        options = (len(batch), len(json.dumps(batch).encode('utf8')))
+        message = 'Batch length: %s, Batch size: %s' % options
+        self.log_http_request('debug', message)
 
     def send_batch(self, batch: dict) -> None:
-        response = self.__session.post(
-            self.url,
-            headers=self.headers,
-            json=batch,
-            verify=self._ssl_verify,
-            timeout=self._timeout,
-        )
+        try:
+            response = self.__session.post(
+                self.url,
+                headers=self.headers,
+                json=batch,
+                verify=self._ssl_verify,
+                timeout=self._timeout,
+            )
 
-        if not response.ok:
-            self.__session.close()
-            response.raise_for_status()
+            if not response.ok:
+                self.__session.close()
+                response.raise_for_status()
+        except requests.exceptions.RequestException as exc:
+            self.log_http_request('exception', exc)
 
 
 class HttpLogFormatter(LogstashFormatter):
