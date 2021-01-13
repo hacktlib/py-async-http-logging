@@ -34,9 +34,17 @@ constants.DATABASE_TIMEOUT = float(os.environ.get('ASYNC_LOG_DATABASE_TIMEOUT', 
 @dataclass
 class HttpHost:
     name: str
-    port: int = None
+    _port: int = None
     path: str = None
     timeout: int = TIMEOUT
+
+    @property
+    def port(self) -> int:
+        return self._port or self.default_port
+
+    @property
+    def default_port(self, ssl_enable: bool) -> int:
+        return HTTPS_PORT if ssl_enable else HTTP_PORT
 
 
 @dataclass
@@ -87,19 +95,28 @@ class AsyncHttpHandler(AsynchronousLogstashHandler):
     def __init__(
         self,
         http_host: HttpHost,
-        support_class: SupportClass = None,
-        config: ConfigLog = ConfigLog(),
+        support_class: Optional[SupportClass] = None,
+        config: Optional[ConfigLog] = None,
         **kwargs,
     ):
-        if support_class is None:
-            support_class = SupportClass(http_host=http_host)
+        self.http_host = http_host
+        self.support_class = support_class
+        self.config = config
 
-        resolve_port = http_host.port or \
-            HTTPS_PORT if config.security.ssl_enable else HTTP_PORT
+        # Set default ConfigLog params
+        if self.config is None:
+            self.config = ConfigLog()
+
+        # Set default support classes
+        if self.support_class is None:
+            self.support_class = SupportClass(
+                http_host=http_host,
+                config=config,
+            )
 
         super().__init__(
             host=http_host.host,
-            port=resolve_port,
+            port=http_host.port,
             database_path=config.database_path,
             transport=support_class.transport,
             ssl_enable=config.security.ssl_enable,
@@ -120,30 +137,24 @@ class AsyncHttpTransport(HttpTransport):
 
     def __init__(
         self,
-        host: str,
-        port: Optional[int] = None,
-        path: Optional[str] = None,
-        timeout: Union[None, float] = TimeoutNotSet,
-        ssl_enable: bool = True,
-        ssl_verify: Union[bool, str] = True,
-        use_logging: bool = False,
-        custom_headers: Callable = None,
+        http_host: HttpHost,
+        config: ConfigLog = ConfigLog(),
         **kwargs
     ):
         super().__init__(
-            host=host,
-            port=port,
-            timeout=timeout,
-            ssl_enable=ssl_enable,
-            ssl_verify=ssl_verify,
-            use_logging=use_logging,
+            host=http_host.host,
+            port=http_host.port,
+            timeout=http_host.timeout,
+            ssl_enable=config.security.ssl_enable,
+            ssl_verify=config.security.ssl_verify,
+            use_logging=config.use_logging,
             **kwargs,
         )
 
         self.__batches = super()._HttpTransport__batches
 
-        self._path = path
-        self._custom_headers = custom_headers
+        self._path = http_host.path
+        self._custom_headers = config.custom_headers
 
     @property
     def url(self) -> str:
