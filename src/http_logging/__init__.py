@@ -1,9 +1,10 @@
 import copy
+from dataclasses import dataclass
 import json
 import logging
 import os
 import sys
-from typing import Callable, Dict, List, Optional, Union
+from typing import Callable, List, Optional, Union
 
 from logstash_async import constants
 from logstash_async.formatter import LogstashFormatter
@@ -30,52 +31,65 @@ constants.QUEUED_EVENTS_BATCH_SIZE = int(os.environ.get('ASYNC_LOG_QUEUED_EVENTS
 constants.DATABASE_TIMEOUT = float(os.environ.get('ASYNC_LOG_DATABASE_TIMEOUT', 2.5))  # NOQA
 
 
+@dataclass
+class HttpHost:
+    name: str
+    port: int = None
+    path: str = None
+    timeout: int = TIMEOUT
+
+
+@dataclass
+class HttpSecurity:
+    ssl_enable: bool = True,
+    ssl_verify: bool = True,
+    keyfile: str = None,
+    certfile: str = None,
+    ca_certs: list = None,
+
+
+@dataclass
+class ConfigLog:
+    database_path: str = DATABASE_PATH
+    event_ttl: int = None
+    use_logging: bool = False
+    encoding: str = ENCODING
+    custom_headers: Callable = None
+
+
 class AsyncHttpHandler(AsynchronousLogstashHandler):
 
     def __init__(
         self,
-        host: str,
-        port: Optional[int] = None,
-        path: Optional[str] = None,
-        timeout: int = TIMEOUT,
-        database_path: str = DATABASE_PATH,
+        http_host: HttpHost,
+        security: HttpSecurity = HttpSecurity(),
+        config: ConfigLog = ConfigLog(),
         transport: Transport = None,
         formatter: logging.Formatter = None,
-        custom_headers: Callable = None,
-        ssl_enable: bool = True,
-        ssl_verify: bool = True,
-        keyfile=None,
-        certfile=None,
-        ca_certs=None,
         enable: bool = True,
-        event_ttl: int = None,
-        encoding: str = ENCODING,
-        use_logging: bool = False,
         **kwargs,
     ):
         # Default to customized HTTP Transport
         if transport is None:
             transport = AsyncHttpTransport(
-                host=host,
-                port=port,
-                path=path,
-                timeout=timeout,
-                ssl_enable=ssl_enable,
-                ssl_verify=ssl_verify,
-                use_logging=use_logging,
-                custom_headers=custom_headers,
+                http_host=http_host,
+                security=security,
+                config=config,
             )
 
+        resolve_port = http_host.port or \
+            HTTPS_PORT if security.ssl_enable else HTTP_PORT
+
         super().__init__(
-            host=host,
-            port=port or HTTPS_PORT if ssl_enable else HTTP_PORT,
+            host=http_host.host,
+            port=resolve_port,
             database_path=database_path,
             transport=transport,
-            ssl_enable=ssl_enable,
-            ssl_verify=ssl_verify,
-            keyfile=keyfile,
-            certfile=certfile,
-            ca_certs=ca_certs,
+            ssl_enable=security.ssl_enable,
+            ssl_verify=security.ssl_verify,
+            keyfile=security.keyfile,
+            certfile=security.certfile,
+            ca_certs=security.ca_certs,
             enable=enable,
             event_ttl=event_ttl,
             encoding=encoding,
