@@ -224,7 +224,7 @@ class HttpLogFormatter(LogstashFormatter):
                 'name': record.levelname,
             },
             'stack_trace': self._format_exception(record.exc_info),
-            'sourcecode': {
+            'source_code': {
                 'pathname': record.pathname,
                 'function': record.funcName,
                 'line': record.lineno,
