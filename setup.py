@@ -14,6 +14,9 @@ dev_requirements = [
     'autopep8>=1.5.4',
     'flake8>=3.8.4',
     'pytest>=6.2.1',
+    'coverage>=5.3',
+    'coverage-badge>=1.0.1',
+    'wheel>=0.36.2',
 ]
 
 publish_requirements = dev_requirements + ['twine>=3.2.0']
