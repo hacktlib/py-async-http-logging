@@ -37,11 +37,11 @@ class HttpHost:
 
 @dataclass
 class HttpSecurity:
-    ssl_enable: bool = True,
-    ssl_verify: bool = True,
-    keyfile: str = None,
-    certfile: str = None,
-    ca_certs: list = None,
+    ssl_enable: bool = True
+    ssl_verify: bool = True
+    keyfile: str = None
+    certfile: str = None
+    ca_certs: list = None
 
 
 @dataclass
