@@ -11,6 +11,28 @@ import http_logging
 logger = logging.getLogger('http-logging')
 
 
+class HttpTransportLogger():
+
+    def __init__(self, logger: logging.Logger, enabled: bool) -> None:
+        self.enabled = enabled
+        self.logger_methods = {
+            'info': logger.info,
+            'debug': logger.debug,
+            'warning': logger.warning,
+            'error': logger.error,
+            'exception': logger.exception,
+        }
+
+    def __getattr__(self, attr_name):
+        if self.enabled:
+            return self.logger_methods[attr_name]
+
+        return self.ignore_logs
+
+    def ignore_logs(self, *args, **kwargs) -> None:
+        pass
+
+
 class AsyncHttpTransport(HttpTransport):
 
     def __init__(
@@ -71,19 +93,17 @@ class AsyncHttpTransport(HttpTransport):
 
         self.__session.close()
 
-    def log_http_request(
-        self,
-        method: str,
-        content: Union[str, Exception],
-        **kwargs,
-    ) -> None:
-        if self._use_logging:
-            getattr(logger, method)(content, **kwargs)
+    @property
+    def logger(self) -> HttpTransportLogger:
+        return HttpTransportLogger(
+            logger=logger,
+            enabled=self.config.use_logging,
+        )
 
     def log_batch(self, batch: List[dict]) -> None:
         options = (len(batch), len(json.dumps(batch).encode('utf8')))
         message = 'Batch length: %s, Batch size: %s' % options
-        self.log_http_request('debug', message)
+        self.logger.debug(message)
 
     def send_batch(self, batch: dict) -> None:
         try:
@@ -98,5 +118,5 @@ class AsyncHttpTransport(HttpTransport):
             if not response.ok:
                 self.__session.close()
                 response.raise_for_status()
-        except requests.exceptions.RequestException as exc:
-            self.log_http_request('exception', exc)
+        except Exception as exc:
+            self.logger.exception(exc)
