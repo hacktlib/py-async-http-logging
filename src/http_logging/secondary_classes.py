@@ -51,7 +51,7 @@ class ConfigLog:
     use_logging: bool = False
     encoding: str = constants.ENCODING
     custom_headers: Callable = None
-    enable: bool = True,
+    enable: bool = True
     security: HttpSecurity = HttpSecurity()
 
 
