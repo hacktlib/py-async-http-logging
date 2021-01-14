@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import logging
-from typing import Callable
+from typing import Callable, Optional
 
 from logstash_async.transport import Transport
 
@@ -13,18 +13,10 @@ logger = logging.getLogger('http-logging')
 @dataclass
 class HttpHost:
     name: str
-    _port: int = None
-    path: str = None
+    port: Optional[int] = None
+    path: Optional[str] = None
     timeout: int = constants.TIMEOUT
     _parentHandler = None
-
-    @property
-    def port(self) -> int:
-        return self._port or self.default_port
-
-    @property
-    def default_port(self) -> int:
-        return constants.HTTPS_PORT if self.ssl_enable else constants.HTTP_PORT
 
     @property
     def ssl_enable(self) -> bool:
