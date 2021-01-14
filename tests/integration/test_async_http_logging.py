@@ -1,12 +1,12 @@
 import logging
-import json
 import time
 import traceback
 
 import requests
 
-# from logstash_async.transport import HttpTransport
-from http_logging import AsyncHttpHandler, AsyncHttpTransport
+from http_logging import HttpHost, ConfigLog, HttpSecurity, SupportClass
+from http_logging.handler import AsyncHttpHandler
+from http_logging.transport import AsyncHttpTransport
 
 
 logging.Formatter.converter = time.gmtime
@@ -16,24 +16,38 @@ def test_handler(run_localserver, localhost):
     custom_path = 'foo-bar-path'
     custom_header_dict = {'Foo': 'Bar'}
 
-    log_handler = AsyncHttpHandler(
-        host=localhost.host,
+    http_host = HttpHost(
+        name=localhost.host,
         port=localhost.port,
         path=custom_path,
+        timeout=localhost.timeout
+    )
+
+    security = HttpSecurity(
         ssl_enable=False,
         ssl_verify=False,
+    )
+
+    config = ConfigLog(
         database_path=localhost.database_path,
         use_logging=True,
-        transport=AsyncHttpTransport(
-            host=localhost.host,
-            port=localhost.port,
-            path=custom_path,
-            timeout=localhost.timeout,
-            ssl_enable=False,
-            ssl_verify=False,
-            use_logging=True,
-            custom_headers=lambda: custom_header_dict,
+        custom_headers=lambda: custom_header_dict,
+        security=security,
+    )
+
+    support_class = SupportClass(
+        http_host=http_host,
+        config=config,
+        _transport=AsyncHttpTransport(
+            http_host=http_host,
+            config=config,
         ),
+    )
+
+    log_handler = AsyncHttpHandler(
+        http_host=http_host,
+        config=config,
+        support_class=support_class,
     )
 
     logger = logging.getLogger('test_handler')

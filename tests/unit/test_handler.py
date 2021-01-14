@@ -19,7 +19,6 @@ def test_default_args(http_host):
     assert handler._host == 'dummy-host.com'
     assert isinstance(handler._transport, AsyncHttpTransport)
     assert isinstance(handler.formatter, HttpLogFormatter)
-    assert handler._port == http_logging.constants.HTTPS_PORT
 
 
 def test_custom_formatter_and_transport(http_host):
