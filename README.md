@@ -37,7 +37,9 @@ pip install http_logging
 
 ```python
 import logging
-from http_logging import AsyncHttpHandler, HttpHost
+
+from http_logging import HttpHost
+from http_logging.handler import AsyncHttpHandler
 
 log_handler = AsyncHttpHandler(http_host=HttpHost(name='your-domain.com'))
 
