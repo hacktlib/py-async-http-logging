@@ -9,6 +9,7 @@ Non-blocking HTTP handler for Python `logging` with local SQLite buffer/cache.
 [![Maintainability](https://img.shields.io/codeclimate/maintainability/hacktlib/py-async-http-logging)](https://codeclimate.com/github/hacktlib/py-async-http-logging)
 [![Technical Debt](https://img.shields.io/codeclimate/tech-debt/hacktlib/py-async-http-logging)](https://codeclimate.com/github/hacktlib/py-async-http-logging)
 [![Issues](https://img.shields.io/codeclimate/issues/hacktlib/py-async-http-logging)](https://codeclimate.com/github/hacktlib/py-async-http-logging/issues?category=complexity&engine_name%5B%5D=structure&engine_name%5B%5D=duplication)
+[![CodeFactor](https://www.codefactor.io/repository/github/hacktlib/py-async-http-logging/badge)](https://www.codefactor.io/repository/github/hacktlib/py-async-http-logging)
 
 [![Requirements Status](https://requires.io/github/hacktlib/py-async-http-logging/requirements.svg?branch=main)](https://requires.io/github/hacktlib/py-async-http-logging/requirements/?branch=main)
 [![PyPI](https://img.shields.io/pypi/v/http_logging)](https://pypi.org/project/http_logging/)
