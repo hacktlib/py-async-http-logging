@@ -2,8 +2,6 @@
 
 Non-blocking HTTP handler for Python `logging` with local SQLite buffer/cache.
 
-> This library was written for [Hackt CLI](https://hackt.app/?utm_source=github&utm_medium=gitlink&utm_campaign=oss-py-async-http-logging) and open sourced for anyone interested.
-
 ![Test Coverage](https://raw.githubusercontent.com/hacktlib/py-async-http-logging/main/coverage.svg)
 ![Maintained](https://img.shields.io/maintenance/yes/2021)
 [![Maintainability](https://img.shields.io/codeclimate/maintainability/hacktlib/py-async-http-logging)](https://codeclimate.com/github/hacktlib/py-async-http-logging)
