@@ -25,12 +25,12 @@ class HttpHost:
 
         return self._parentHandler.config.security.ssl_enable
 
-    def get_parent_handler(self) -> 'AsyncHttpHandler':
+    def get_parent_handler(self) -> 'AsyncHttpHandler':  # NOQA
         return self._parentHandler
 
     def register_parent_handler(
         self,
-        handler: 'AsyncHttpHandler',
+        handler: 'AsyncHttpHandler',  # NOQA
     ) -> None:
         self._parentHandler = handler
 
