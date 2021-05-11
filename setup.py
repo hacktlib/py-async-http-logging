@@ -57,7 +57,7 @@ setup(
         'pub': publish_requirements,
     },
     project_urls={
-        'Bug Reports': 'https://github.com/hacktlib/py-async-http-logging/issues',
+        'Bug Reports': 'https://github.com/hacktlib/py-async-http-logging/issues',  # NOQA
         'Say Thanks!': 'http://lib.hackt.app',
         'Source': 'https://github.com/hacktlib/py-async-http-logging/',
     },

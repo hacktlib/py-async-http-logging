@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import List, Optional, Union
+from typing import List, Optional
 
 from logstash_async.transport import HttpTransport
 import requests
