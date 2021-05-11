@@ -12,7 +12,7 @@ logger = logging.getLogger('http-logging')
 
 @dataclass
 class HttpHost:
-    name: str
+    name: Optional[str] = None
     port: Optional[int] = None
     path: Optional[str] = None
     timeout: int = constants.TIMEOUT

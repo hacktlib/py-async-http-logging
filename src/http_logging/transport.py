@@ -6,6 +6,7 @@ from logstash_async.transport import HttpTransport
 import requests
 
 import http_logging
+from http_logging.secondary_classes import HttpHost
 
 
 logger = logging.getLogger('http-logging')
@@ -38,10 +39,13 @@ class AsyncHttpTransport(HttpTransport):
     def __init__(
         self,
         *,  # Prevent usage of positional args
-        http_host: http_logging.HttpHost,
+        http_host: Optional[http_logging.HttpHost] = None,
         config: Optional[http_logging.ConfigLog] = None,
         **kwargs
     ):
+        if not http_host:
+            http_host = HttpHost(name=None)
+
         self.http_host = http_host
         self.config = config
 
