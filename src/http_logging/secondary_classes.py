@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import logging
 from typing import Callable, Optional
 
@@ -41,7 +41,7 @@ class HttpSecurity:
     ssl_verify: bool = True
     keyfile: str = None
     certfile: str = None
-    ca_certs: list = None
+    ca_certs: list = field(default_factory=list)
 
 
 @dataclass
@@ -52,13 +52,13 @@ class ConfigLog:
     encoding: str = constants.ENCODING
     custom_headers: Callable = None
     enable: bool = True
-    security: HttpSecurity = HttpSecurity()
+    security: HttpSecurity = field(default_factory=HttpSecurity)
 
 
 @dataclass
 class SupportClass:
     http_host: HttpHost
-    config: ConfigLog = ConfigLog()
+    config: ConfigLog = field(default_factory=ConfigLog)
     _transport: Transport = None
     _formatter: logging.Formatter = None
 
